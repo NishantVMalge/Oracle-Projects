@@ -1,0 +1,356 @@
+-- Create Patient Info Table
+CREATE TABLE PATIENT_INFO (
+    PATIENT_ID NUMBER PRIMARY KEY,
+    PATIENT_FULL_NAME VARCHAR2(100),
+    DOB DATE,
+    P_GENDER VARCHAR2(1) CHECK (P_GENDER IN ('M', 'F')),
+    MOBILE NUMBER(13),
+    P_ADDRESS VARCHAR2(500)
+);
+
+-- Create Doctor Info Table
+CREATE TABLE DOCTOR_INFO (
+    DOCTOR_ID NUMBER PRIMARY KEY,
+    DOCTOR_FULL_NAME VARCHAR2(100),
+    D_GENDER VARCHAR2(1) CHECK (D_GENDER IN ('M', 'F')),
+    MOBILE NUMBER(13)
+);
+
+-- Create Appointment Table
+CREATE TABLE APPOINTMENT (
+    APPOINTMENT_ID NUMBER PRIMARY KEY,
+    APPOINTMENT_DATE DATE default sysdate,
+    PATIENT_ID NUMBER,
+    DOCTOR_ID NUMBER,
+    CONSTRAINT FK_APNTMNT_PID FOREIGN KEY (PATIENT_ID) REFERENCES PATIENT_INFO (PATIENT_ID) ON DELETE CASCADE,
+    CONSTRAINT FK_DID FOREIGN KEY (DOCTOR_ID) REFERENCES DOCTOR_INFO (DOCTOR_ID) ON DELETE CASCADE
+);
+
+-- Create Test Reports Table
+CREATE TABLE TEST_REPORTS (
+    TEST_ID NUMBER PRIMARY KEY,
+    TEST_DATE DATE,
+    PATIENT_ID NUMBER,
+    TEST_RESULT VARCHAR2(20) CHECK (TEST_RESULT IN ('POSITIVE', 'NEGATIVE')),
+    CONSTRAINT FK_TST_PID FOREIGN KEY (PATIENT_ID) REFERENCES PATIENT_INFO (PATIENT_ID) ON DELETE CASCADE
+);
+
+-- Create Admission Table
+CREATE TABLE ADMISSION (
+    ADMISSION_ID NUMBER PRIMARY KEY,
+    PATIENT_ID NUMBER,
+    ADMISSION_DATE DATE default sysdate,
+    ROOM_NO NUMBER,
+    DISCHARGE_DATE DATE,
+    CONSTRAINT FK_ADMSN_PID FOREIGN KEY (PATIENT_ID) REFERENCES PATIENT_INFO (PATIENT_ID) ON DELETE CASCADE
+);
+
+-- Create Bill Table
+CREATE TABLE BILL (
+    BILL_ID NUMBER PRIMARY KEY,
+    PATIENT_ID NUMBER,
+    BILL_AMOUNT NUMBER(15, 2),
+    PAYMENT_MODE VARCHAR2(50),
+    PAYMENT_STATUS NVARCHAR2(50),
+    CONSTRAINT FK_BL_PID FOREIGN KEY (PATIENT_ID) REFERENCES PATIENT_INFO (PATIENT_ID) ON DELETE CASCADE
+);
+
+-- Create Medicine Prescription Table
+CREATE TABLE MEDICINE_PRESCRIPTION (
+    PRESCRIPTION_ID NUMBER PRIMARY KEY,
+    PATIENT_ID NUMBER,
+    PRESCRIPTION_DATE DATE,
+    MEDICINE_NAME NVARCHAR2(1000), -- Oracle uses NVARCHAR2 with a larger default max size
+    CONSTRAINT FK_PRSRPN_PID FOREIGN KEY (PATIENT_ID) REFERENCES PATIENT_INFO (PATIENT_ID) ON DELETE CASCADE
+);
+
+-- Create Employees Table
+CREATE TABLE EMPLOYEES (
+    EMP_ID NUMBER PRIMARY KEY,
+    EMP_NAME VARCHAR2(100),
+    E_GENDER VARCHAR2(1),
+    DESIGNATION VARCHAR2(100),
+    MOBILE NUMBER,
+    EMP_ADDRESS NVARCHAR2(500)
+);
+
+---------------------------------------------------------------------------------------------
+
+-- create Sequence & triger to insert id automatically ( But Not using in insert statement ) 
+
+create sequence s_id 
+start with 1
+increment by 1 ;
+
+-----------------------------------------
+
+create or replace trigger tr_Id_insert after insert on patient_info 
+for each row
+begin
+:new.PATIENT_ID := s_id.nextval;
+end;
+
+---------------------------------------------------------------------------------------------
+
+-- Insert data into tables --
+
+INSERT INTO PATIENT_INFO VALUES
+(1,'RAM SHYAM PATIL', to_date('25-10-1999','dd-mm-yyyy'),'M',1223456789,'MUMBAI');
+INSERT INTO PATIENT_INFO VALUES
+(2,'NISHANT VIJAY MALGE',to_date('22-08-1989','dd-mm-yyyy'),'M',8855919263,'THANE');
+INSERT INTO PATIENT_INFO VALUES
+(3,'ASHWINI GASE',to_date('25-12-1993','dd-mm-yyyy'),'F',8855919266,'NAGPUR');
+INSERT INTO PATIENT_INFO VALUES
+(4,'RAVINA RAKESH YADAV',to_date('28-111998','dd-mm-yyyy'),'F',2583691470,'KALYAN');
+
+INSERT INTO DOCTOR_INFO values
+(11,'V.R.AGRAWAL','M',1478523698);
+INSERT INTO DOCTOR_INFO values
+(12,'N.D.DESHMUKH','M',2587413698);
+INSERT INTO DOCTOR_INFO values
+(13,'R.S.PATIL','F',7896541236);
+INSERT INTO DOCTOR_INFO values
+(14,'J.S.DAS','F',3654789215);
+
+INSERT INTO APPOINTMENT (APPOINTMENT_ID,PATIENT_ID,DOCTOR_ID) VALUES
+(21,1,12);
+INSERT INTO APPOINTMENT (APPOINTMENT_ID,PATIENT_ID,DOCTOR_ID) VALUES
+(22,2,11);
+INSERT INTO APPOINTMENT (APPOINTMENT_ID,PATIENT_ID,DOCTOR_ID) VALUES
+(23,3,14);
+INSERT INTO APPOINTMENT (APPOINTMENT_ID,PATIENT_ID,DOCTOR_ID) VALUES
+(24,4,13);
+
+INSERT INTO TEST_REPORTS VALUES
+(31,to_date('12-05-2023','dd-mm-yyyy'),1,'NEGATIVE');
+INSERT INTO TEST_REPORTS VALUES
+(32,to_date('30-07-2021','dd-mm-yyyy'),2,'POSITIVE');
+INSERT INTO TEST_REPORTS VALUES
+(33,to_date('11-09-2020','dd-mm-yyyy'),3,'POSITIVE');
+INSERT INTO TEST_REPORTS VALUES
+(34,to_date('17-01-2022','dd-mm-yyyy'),4,'POSITIVE');
+
+INSERT INTO ADMISSION (ADMISSION_ID,PATIENT_ID,ROOM_NO,DISCHARGE_DATE) VALUES
+(41,2,101,to_date('05-08-2021','dd-mm-yyyy'));
+INSERT INTO ADMISSION (ADMISSION_ID,PATIENT_ID,ROOM_NO,DISCHARGE_DATE) VALUES
+(42,3,102,to_date('18-09-2022','dd-mm-yyyy'));
+INSERT INTO ADMISSION (ADMISSION_ID,PATIENT_ID,ROOM_NO,DISCHARGE_DATE) VALUES
+(43,4,103,to_date('14-07-2023','dd-mm-yyyy'));
+
+INSERT INTO BILL (BILL_ID,PATIENT_ID,BILL_AMOUNT,PAYMENT_MODE,PAYMENT_STATUS) VALUES
+(51,2,20000,'ONLINE','COMPLETED');
+INSERT INTO BILL (BILL_ID,PATIENT_ID,BILL_AMOUNT,PAYMENT_MODE,PAYMENT_STATUS) VALUES
+(52,3,35000,'ONLINE','COMPLETED');
+INSERT INTO BILL (BILL_ID,PATIENT_ID,BILL_AMOUNT,PAYMENT_MODE,PAYMENT_STATUS) VALUES
+(53,4,30000,'CASH','COMPLETED');
+
+INSERT INTO MEDICINE_PRESCRIPTION VALUES
+(71,1,to_date('12-05-2023','dd-mm-yyyy'),'Acetaminophen,Adderall,Amitriptyline,Amlodipine');
+INSERT INTO MEDICINE_PRESCRIPTION VALUES
+(72,2,to_date('30-07-2021','dd-mm-yyyy'),'Amoxicillin,Ativan,Atorvastatin,Azithromycin');
+INSERT INTO MEDICINE_PRESCRIPTION VALUES
+(73,1,to_date('19-05-2023','dd-mm-yyyy'),'Acetaminophen,Adderall,Amitriptyline,Amlodipine');
+INSERT INTO MEDICINE_PRESCRIPTION VALUES
+(74,3,to_date('11-09-2020','dd-mm-yyyy'),'Adderall,Amitriptyline,Amlodipine,Amoxicillin');
+INSERT INTO MEDICINE_PRESCRIPTION VALUES
+(75,4,to_date('17-01-2022','dd-mm-yyyy'),'Acetaminophen,Amoxicillin,Amitriptyline,Amlodipine');
+
+INSERT INTO EMPLOYEES VALUES
+(61,'SHAM P RATHOD','M','WARDBOY',8469871236,'NAGPUR');
+INSERT INTO EMPLOYEES VALUES
+(62,'HARI S SHAHA','M','WARDBOY',5507971236,'BADLAPUR');
+INSERT INTO EMPLOYEES VALUES
+(63,'ANKITA P RANE','F','NURSE',5969871236,'THANE');
+INSERT INTO EMPLOYEES VALUES
+(64,'KAJAL G RATHI','F','NURSE',6463771256,'NANDURA');
+INSERT INTO EMPLOYEES VALUES
+(65,'SHITAL H. KANE','F','SWEEPER',9469871236,'BHIWANDI');
+
+-----------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM PATIENT_INFO;
+SELECT * FROM DOCTOR_INFO;
+SELECT * FROM APPOINTMENT;
+SELECT * FROM TEST_REPORTS;
+SELECT * FROM ADMISSION;
+SELECT * FROM BILL;
+SELECT * FROM MEDICINE_PRESCRIPTION;
+SELECT * FROM EMPLOYEES;
+
+--drop table PATIENT_INFO;
+--drop table DOCTOR_INFO;
+--drop table APPOINTMENT;
+--drop table TEST_REPORTS;
+--drop table ADMISSION;
+--drop table BILL;
+--drop table MEDICINE_PRESCRIPTION;
+--drop table EMPLOYEES;
+
+
+
+---------------------------------------------------------------------------------------------
+
+--SET SERVEROUTPUT ON ;
+
+-- CREATE A PROCEDURE TO FIND PATIENT DETAILS ALONG WITH REPORTS, CORRESPONDING DOCTOR, ADMISSION DATE , AGE ETC. IF NOT ADMITTED AND NO TEST 
+-- THEN PRINT NOT ADMITTED / NO TEST DONE 
+CREATE OR REPLACE PROCEDURE PROC_PATIENT_DETAILS ( Pid NUMBER)
+AS
+patient_id  NUMBER;
+patient_full_name VARCHAR2(100);
+age  NUMBER;
+p_gender VARCHAR2(8);
+mobile  NUMBER;
+p_address  VARCHAR2(1000);
+doctor_full_name VARCHAR2(100);
+appointment_date  DATE;
+test_result    VARCHAR2(100);
+admission_date  DATE;
+discharge_date  DATE;
+bill_amount   NUMBER;
+payment_status  VARCHAR2(100);
+BEGIN
+
+SELECT  P.patient_full_name, TRUNC((sysdate - P.dob)/365)AS age, P.p_gender, P.mobile, P.p_address,
+D.doctor_full_name ,A.appointment_date ,nvl(T.test_result,'NO TEST DONE') test_result,
+nvl(to_char(ad.admission_date),'NOT ADMITTED')admission_date,nvl( to_char(ad.discharge_date),'NOT ADMITTED')discharge_date,
+B.bill_amount,B.payment_status 
+INTO  patient_full_name, age, p_gender, mobile, p_address, doctor_full_name, appointment_date, test_result, admission_date,
+discharge_date, bill_amount, payment_status
+FROM
+patient_info P 
+LEFT JOIN appointment A ON P.patient_id= A.patient_id
+LEFT JOIN doctor_info D ON D.doctor_id = A.doctor_id
+LEFT JOIN test_reports T ON T.patient_id = P.patient_id
+LEFT JOIN admission ad ON ad.patient_id= P.patient_id
+LEFT JOIN bill B ON B.patient_id = P.patient_id 
+WHERE P.patient_id = Pid ;
+
+DBMS_OUTPUT.PUT_LINE ( 
+', patient_id = ' ||Pid  ||
+', patient_full_name = ' || patient_full_name||
+', age = ' ||age||
+', p_gender = ' ||p_gender||
+', mobile = ' ||mobile||
+', p_address = ' ||p_address||
+', doctor_full_name = ' ||doctor_full_name||
+', appointment_date = ' ||TO_CHAR(appointment_date,'dd-mm-yyyy')||
+', test_result = ' ||test_result||
+', admission_date = ' ||TO_CHAR(admission_date,'dd-mm-yyyy')||
+', discharge_date = ' ||TO_CHAR(discharge_date,'dd-mm-yyyy')||
+', bill_amount = ' ||bill_amount||
+', payment_status = ' ||payment_status) ;
+
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+DBMS_OUTPUT.PUT_LINE(' INCORRECT PATIENT ID ') ;
+WHEN OTHERS THEN
+DBMS_OUTPUT.PUT_LINE (' - ERROR MESSAGE' || SQLERRM ) ;
+END;
+
+exec PROC_PATIENT_DETAILS ('2');
+
+---------------------------------------------------------------------------------------------
+
+-- CREATE MATERIALIZED VIEW WITH MANUAL & AUTO REFRESH 
+
+CREATE MATERIALIZED VIEW V_EMPLOYEES
+as
+select EMP_ID, EMP_NAME, DESIGNATION, MOBILE from EMPLOYEES ;
+
+select * from V_EMPLOYEES ;
+
+insert into EMPLOYEES values( 67,'view','M','HELPER',12346676,'WARDHA');
+
+SELECT * FROM EMPLOYEES;
+
+exec dbms_mview.refresh('V_EMPLOYEES') ;  -- MANUAL REFRESH
+
+select * from V_EMPLOYEES ;
+
+delete from EMPLOYEES where EMP_ID = 67;
+
+-- FOR AUTO UPDATE CREATE A TRIGGER (N.W.)
+
+---------------------------------
+
+
+-- CREATE MATERIALIZED VIEW WITH AUTO REFRESH 
+
+-- FOR AUTO REFRESH OF MATERIALIZED VIEW WE HAVE TO CREATE MATERIALIZED VIEW LOGS AS -
+
+CREATE MATERIALIZED VIEW LOG ON EMPLOYEES
+WITH PRIMARY KEY, ROWID;
+
+-- NOW CREATE MATERIALIZED VIEW WITH AUTO REFRESH
+
+CREATE  MATERIALIZED VIEW  V_EMPLOYEES_AUTO_REF
+BUILD IMMEDIATE
+REFRESH FAST ON COMMIT
+ AS
+select EMP_ID, EMP_NAME, DESIGNATION, MOBILE from EMPLOYEES ;
+
+---------------------------------
+-- DAILY PATIENT COUNT & TOTAL BILL AMOUNT 
+
+select count(p.patient_id)as TODAYS_TOTAL_PATIENT, sum(b.bill_amount) as Todays_total_collection from PATIENT_INFO p
+left join bill b on p.patient_id = b.patient_id
+left join APPOINTMENT a on p.patient_id=a.appointment_id
+and APPOINTMENT_DATE = trunc(sysdate) ; --to_date('23-03-25','dd-mm-yyyy') ;
+
+
+---------------------------------------------------------------------------------------------
+
+-- CREATE TRIGGER TO TO TAKE BACKUP BEFORE DELETE -- 
+
+CREATE TABLE PATIENT_INFO_BKP AS SELECT * FROM PATIENT_INFO WHERE 1 = 2 ;
+
+ALTER TABLE PATIENT_INFO_BKP
+ADD USER_ID NVARCHAR2(500);
+
+ALTER TABLE PATIENT_INFO_BKP
+ADD DELETE_DATE DATE ;
+
+SELECT * FROM PATIENT_INFO_BKP ;
+
+SET SERVEROUTPUT ON ;
+
+CREATE OR REPLACE TRIGGER TR_BKP BEFORE DELETE ON PATIENT_INFO
+FOR EACH ROW
+
+BEGIN
+INSERT INTO PATIENT_INFO_BKP
+(PATIENT_ID, PATIENT_FULL_NAME, DOB, P_GENDER, MOBILE, P_ADDRESS, USER_ID, DELETE_DATE)
+VALUES (
+:OLD.PATIENT_ID, :OLD.PATIENT_FULL_NAME, :OLD.DOB, :OLD.P_GENDER, :OLD.MOBILE, :OLD.P_ADDRESS, USER,SYSDATE );
+
+DBMS_OUTPUT.PUT_LINE('BACKUP DONE') ;
+
+EXCEPTION
+WHEN OTHERS THEN
+DBMS_OUTPUT.PUT_LINE( 'ERROR MESSAGE - ' || SQLERRM) ;
+END ;
+------------------------CHECK --
+INSERT INTO PATIENT_INFO VALUES
+(5,'CHINU', to_date('25-10-1999','dd-mm-yyyy'),'M',1223456789,'MUMBAI');
+COMMIT ;
+SELECT * FROM PATIENT_INFO;
+DELETE FROM PATIENT_INFO WHERE PATIENT_ID =  5 ;
+
+---------------------------------------------------------------------------------------------
+
+-- SELECT GENDERWISE 2ND HIGHEST BILL PAYING PATIENT NAME
+
+SELECT * FROM (
+SELECT P.PATIENT_FULL_NAME , P.P_GENDER, B.BILL_AMOUNT , DENSE_RANK() OVER (PARTITION BY P.P_GENDER ORDER BY BILL_AMOUNT DESC )RN
+FROM patient_info P LEFT JOIN BILL B ON p.patient_id = b.patient_id ) T
+WHERE T.RN = 2 ;
+
+---------------------------------------------------------------------------------------------
+
+-- FIND RUNNING TOTAL OF BILL --
+
+SELECT BILL_ID, PATIENT_ID, PAYMENT_MODE, PAYMENT_STATUS, BILL_AMOUNT, SUM(BILL_AMOUNT) OVER (ORDER BY BILL_AMOUNT ) AS RUNNING_TOTAL
+FROM BILL  ;
+
+---------------------------------------------------------------------------------------------
